@@ -18,6 +18,8 @@ from CRABClient.client_utilities import getJobTypes, createCache, addPlugin, ser
 from CRABClient.ClientMapping import parameters_mapping, getParamDefaultValue
 from CRABClient import __version__
 
+from WMCore.Configuration import Configuration
+
 DBSURLS = {'reader': {'global': 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader',
                       'phys01': 'https://cmsweb.cern.ch/dbs/prod/phys01/DBSReader',
                       'phys02': 'https://cmsweb.cern.ch/dbs/prod/phys02/DBSReader',
@@ -169,7 +171,7 @@ class submit(SubCommand):
         if self.options.wait:
             self.checkStatusLoop(server,uniquerequestname)
 
-        return uniquerequestname
+        return {'requestname' : self.requestname , 'uniquerequestname' : uniquerequestname }
 
 
     def setOptions(self):
@@ -192,21 +194,24 @@ class submit(SubCommand):
                                 default=False )
 
 
+
     def validateOptions(self):
         """
-        After doing the general options validation from the parent SubCommand class, 
+        After doing the general options validation from the parent SubCommand class,
         do the validation of options that are specific to the submit command.
         """
+
         ## First call validateOptions() from the SubCommand class.
         SubCommand.validateOptions(self)
         ## If no configuration file was passed as an option, try to extract it from the arguments.
-        ## Assume that the arguments can only be: 
-        ##     1) the configuration file name, and 
+        ## Assume that the arguments can only be:
+        ##     1) the configuration file name, and
         ##     2) parameters to override in the configuration file.
-        ## The last ones should all contain an '=' sign, so these are not candidates to be the 
+        ## The last ones should all contain an '=' sign, so these are not candidates to be the
         ## configuration file argument. Also, the configuration file name should end with '.py'.
         ## If can not find a configuration file candidate, use the default 'crabConfig.py'.
         ## If find more than one candidate, raise ConfigurationException.
+
         if self.options.config is None:
             use_default = True
             if len(self.args):
@@ -375,7 +380,7 @@ class submit(SubCommand):
 
         self.logger.info("Waiting for task to be processed")
 
-        maxwaittime= 900 #in second, changed to 15 minute max wait time, the original 1 hour is too long 
+        maxwaittime= 900 #in second, changed to 15 minute max wait time, the original 1 hour is too long
         starttime=currenttime=time.time()
         endtime=currenttime+maxwaittime
 
